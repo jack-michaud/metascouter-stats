@@ -19,6 +19,31 @@ else:
     print('ERROR RETRIEVING JWT TOKEN')
     exit()
 
+def memoize_api(func):
+    cache_file_location = os.getenv('API_DATA_CACHE', 
+                                    os.path.join(os.path.curdir,
+                                                 '.cache.json'))
+    if not os.path.exists(cache_file_location):
+        with open(cache_file_location, 'w') as cache_file:
+            json.dump({}, cache_file)
+
+    def f(url, *args, invalidate=False, **kwargs):
+        # Try to get this URL path from the cache
+        with open(cache_file_location, 'r') as cache_file:
+            cache = json.load(cache_file)
+            # If it exists and we don't want to invalidate the
+            # cache for this call, return the cached val
+            if cache.get(url) is not None and not invalidate:
+                return cache[url]
+        resp = func(url, *args, **kwargs)
+        cache[url] = resp
+
+        with open(cache_file_location, 'w') as cache_file:
+            json.dump(cache, cache_file)
+        return resp
+    return f
+
+@memoize_api
 def api_request(url):
     jwt_auth = {'Authorization': 'JWT ' + token}
     request = requests.get('https://api.metascouter.gg/ssbu/' + url, headers=jwt_auth)
