@@ -9,9 +9,10 @@ import seaborn as sns
 import json
 
 # We need to retrieve the API authorization via JWT token before we can do anything
-pwd = os.getenv('METASCOUTER_PWD')
+username = os.getenv('METASCOUTER_API_USERNAME')
+password = os.getenv('METASCOUTER_API_PASSWORD')
 request = requests.post('https://api.metascouter.gg/auth/obtain-token/',
-                        json={'username': 'Cyan', 'password': pwd})
+                        json={'username': username, 'password': password})
 if request.status_code == 200:
     token = request.json()['token']
 else:
